@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>NEXUS ERP - Corporate Admin Dashboard</title>
+    <!-- Latest Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons for a professional look -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts for typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
+        .sidebar { background-color: #0f172a; min-height: 100vh; color: #94a3b8; width: 260px; position: fixed; z-index: 100; transition: all 0.3s; }
+        .sidebar .nav-link { color: #94a3b8; font-weight: 500; border-radius: 8px; margin-bottom: 5px; padding: 10px 15px; display: flex; align-items: center; cursor: pointer; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #1e293b; color: #f8fafc; }
+        .main-content { margin-left: 260px; padding: 30px; transition: all 0.3s; }
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s; }
+        .btn-xs { padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; }
+        .workflow-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 20px; }
+        .scrollable-panel { max-height: 180px; overflow-y: auto; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR NAVIGATION -->
+<div class="sidebar p-3">
+    <div class="d-flex align-items-center gap-2 px-2 mb-4">
+        <i class="fa-solid fa-chart-pie fs-3 text-primary"></i>
+        <h4 class="text-white fw-bold m-0">ERP SYSTEM</h4>
+    </div>
+    <hr class="border-secondary">
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item"><a class="nav-link active" onclick="switchTab('overview')"><i class="fa-solid fa-house me-2"></i> Overview</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('employees'); loadEmployees();"><i class="fa-solid fa-users me-2"></i> Employees</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('attendance')"><i class="fa-solid fa-clock me-2"></i> Attendance</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('leaves'); loadPendingLeaves();"><i class="fa-solid fa-envelope-open-text me-2"></i> Leaves</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('performance')"><i class="fa-solid fa-star me-2"></i> Performance</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('payroll'); loadPayroll();"><i class="fa-solid fa-file-invoice-dollar me-2"></i> Payroll</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('assets'); loadAssets();"><i class="fa-solid fa-laptop me-2"></i> Assets</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('inventory'); initInventoryModule();"><i class="fa-solid fa-boxes-stacked me-2"></i> Inventory</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('purchase'); initPurchaseModule();"><i class="fa-solid fa-cart-shopping me-2"></i> Purchase Hub</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('sales'); initSalesModule();"><i class="fa-solid fa-sack-dollar me-2"></i> Sales Hub</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('finance'); initFinanceModule();"><i class="fa-solid fa-scale-balanced me-2"></i> Finance Hub</a></li>
+        <!-- New Integrated CRM and Project Hub Links -->
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('crm'); initCRMModule();"><i class="fa-solid fa-address-card me-2"></i> Customer CRM</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchTab('projects'); initProjectModule();"><i class="fa-solid fa-diagram-project me-2"></i> Project Hub</a></li>
+    </ul>
+    <div class="position-absolute bottom-0 start-0 w-100 p-3">
+        <a href="/login" class="btn btn-danger w-100 btn-sm"><i class="fa-solid fa-power-off me-1"></i> Logout</a>
+    </div>
+</div>
+
+<!-- MAIN WORKING PANEL -->
+<div class="main-content">
+
+    <!-- HEADER TOPBAR -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark" id="pageTitle">System Overview</h2>
+            <p class="text-muted small m-0">Enterprise System Management Console Active.</p>
+        </div>
+        <div class="bg-white px-3 py-2 rounded shadow-sm border fw-semibold small text-secondary">
+            <i class="fa-regular fa-calendar me-1 text-primary"></i> Live Session Dashboard
+        </div>
+    </div>
+
+    <!-- SECTION 1: OVERVIEW COMPONENT -->
+    <div id="overview" class="content-section active">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card p-3 bg-white border-start border-primary border-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="text-muted small fw-bold text-uppercase mb-1">Total Strengths</p><h3 class="fw-bold m-0">128</h3></div>
+                        <i class="fa-solid fa-users fs-2 text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card p-3 bg-white border-start border-success border-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="text-muted small fw-bold text-uppercase mb-1">Total Sales Revenue</p><h3 class="fw-bold m-0" id="totalRevenueBadge">$0.00</h3></div>
+                        <i class="fa-solid fa-arrow-trend-up fs-2 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card p-3 bg-white border-start border-warning border-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="text-muted small fw-bold text-uppercase mb-1">Pending Leaves</p><h3 class="fw-bold m-0" id="leaveCountBadge">0</h3></div>
+                        <i class="fa-solid fa-hourglass-half fs-2 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card p-3 bg-white border-start border-danger border-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="text-muted small fw-bold text-uppercase mb-1">Active PO Backlog</p><h3 class="fw-bold m-0" id="poOverviewBadge">0</h3></div>
+                        <i class="fa-solid fa-file-contract fs-2 text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-2">Operational Analytics Status Engine</h5>
+            <p class="text-muted small m-0">All corporate gateways running in optimal telemetry modes. Use the left dashboard cluster to manipulate core database records.</p>
+        </div>
+    </div>
+
+    <!-- SECTION 2: EMPLOYEES COMPONENT -->
+    <div id="employees" class="content-section">
+        <div class="card shadow-sm border-0 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0 text-secondary">Corporate Roster</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmpModal"><i class="fa-solid fa-plus me-1"></i> Add Employee</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-sm">
+                    <thead class="table-light text-secondary small text-uppercase">
+                    <tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Designation</th><th>Salary</th></tr>
+                    </thead>
+                    <tbody id="employeeTableBody" class="small"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: ATTENDANCE COMPONENT -->
+    <div id="attendance" class="content-section">
+        <div class="card shadow-sm border-0 p-4 bg-white" style="max-width: 500px;">
+            <h5 class="fw-bold text-secondary mb-3">Daily Punch Terminal</h5>
+            <div class="mb-3">
+                <label class="form-label small text-muted">Enter Employee ID for System Logging</label>
+                <input type="number" id="attEmpId" class="form-control bg-light" placeholder="e.g. 1">
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success w-50 py-2 fw-semibold" onclick="triggerAttendance('check-in')"><i class="fa-solid fa-right-to-bracket me-1"></i> Punch In</button>
+                <button class="btn btn-danger w-50 py-2 fw-semibold" onclick="triggerAttendance('check-out')"><i class="fa-solid fa-right-from-bracket me-1"></i> Punch Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: LEAVES WORKFLOW COMPONENT -->
+    <div id="leaves" class="content-section">
+        <div class="card shadow-sm border-0 p-4 bg-white mb-4" style="max-width: 600px;">
+            <h5 class="fw-bold text-secondary mb-3">Submit Leave Request</h5>
+            <form id="leaveForm">
+                <div class="row g-2 mb-2">
+                    <div class="col-md-6"><label class="small text-muted">Employee ID</label><input type="number" id="leaveEmpId" class="form-control" required></div>
+                    <div class="col-md-6"><label class="small text-muted">Reason</label><input type="text" id="leaveReason" class="form-control" placeholder="Medical, Casual etc" required></div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6"><label class="small text-muted">Start Date</label><input type="date" id="leaveStart" class="form-control" required></div>
+                    <div class="col-md-6"><label class="small text-muted">End Date</label><input type="date" id="leaveEnd" class="form-control" required></div>
+                </div>
+                <button type="submit" class="btn btn-warning btn-sm text-dark fw-semibold px-4">Submit Application</button>
+            </form>
+        </div>
+
+        <div class="card shadow-sm border-0 p-4 bg-white">
+            <h5 class="fw-bold text-secondary mb-3">Managerial Approval Matrix</h5>
+            <table class="table align-middle table-sm">
+                <thead class="table-light small"><tr><th>Req ID</th><th>Emp ID</th><th>Duration</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="leaveTableBody" class="small"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECTION 5: PERFORMANCE COMPONENT -->
+    <div id="performance" class="content-section">
+        <div class="card shadow-sm border-0 p-4 bg-white" style="max-width: 500px;">
+            <h5 class="fw-bold text-secondary mb-3">Add Performance Appraisal Matrix</h5>
+            <form id="perfForm">
+                <div class="mb-2"><label class="small text-muted">Employee ID</label><input type="number" id="perfEmpId" class="form-control" required></div>
+                <div class="mb-2"><label class="small text-muted">Review Cycle</label><input type="text" id="perfPeriod" class="form-control" placeholder="e.g. Q1 2026" required></div>
+                <div class="mb-2">
+                    <label class="small text-muted">Rating (1 to 5 Stars)</label>
+                    <select id="perfRating" class="form-select"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+                </div>
+                <div class="mb-3"><label class="small text-muted">Managerial Feedback Remarks</label><textarea id="perfFeedback" class="form-control" rows="2" required></textarea></div>
+                <button type="submit" class="btn btn-dark btn-sm w-100 py-2 fw-semibold">Commit Appraisal Review</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION 6: PAYROLL COMPONENT -->
+    <div id="payroll" class="content-section">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-secondary mb-3">Process Monthly Salary</h5>
+                    <form id="payrollForm">
+                        <div class="mb-2"><label class="small text-muted">Employee ID</label><input type="number" id="payEmpId" class="form-control" required></div>
+                        <div class="mb-2"><label class="small text-muted">Salary Month</label><input type="text" id="payMonth" class="form-control" placeholder="e.g. July 2026" required></div>
+                        <div class="mb-2"><label class="small text-muted">Allowances (Bonus/HRA)</label><input type="number" id="payAllowances" class="form-control" value="0" required></div>
+                        <div class="mb-3"><label class="small text-muted">Deductions (PF/Tax)</label><input type="number" id="payDeductions" class="form-control" value="0" required></div>
+                        <button type="submit" class="btn btn-success btn-sm w-100 py-2 fw-semibold">Generate Invoice</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-secondary mb-3">Salary Disbursement Ledger</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-sm">
+                            <thead class="table-light small">
+                            <tr><th>ID</th><th>Emp ID</th><th>Month</th><th>Net Salary</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="payrollTableBody" class="small"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 7: ASSET MANAGEMENT COMPONENT -->
+    <div id="assets" class="content-section">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 bg-white mb-3">
+                    <h5 class="fw-bold text-secondary mb-3">Onboard New Asset</h5>
+                    <form id="assetForm">
+                        <div class="mb-2"><label class="small text-muted">Asset Name</label><input type="text" id="assetName" class="form-control" placeholder="e.g. ThinkPad L14" required></div>
+                        <div class="mb-2"><label class="small text-muted">Asset Type</label><input type="text" id="assetType" class="form-control" placeholder="e.g. Electronics" required></div>
+                        <div class="mb-3"><label class="small text-muted">Serial/Tag Number</label><input type="text" id="assetSerial" class="form-control" placeholder="e.g. SN-9982X" required></div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 py-2">Add to Stock</button>
+                    </form>
+                </div>
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-secondary mb-3">Assign Asset</h5>
+                    <form id="allocateAssetForm">
+                        <div class="mb-2"><label class="small text-muted">Asset ID</label><input type="number" id="allocAssetId" class="form-control" required></div>
+                        <div class="mb-3"><label class="small text-muted">Employee ID</label><input type="number" id="allocEmpId" class="form-control" required></div>
+                        <button type="submit" class="btn btn-dark btn-sm w-100 py-2">Handover Property</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-secondary mb-3">Company Asset Registry</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-sm">
+                            <thead class="table-light small">
+                            <tr><th>ID</th><th>Asset Name</th><th>Serial No</th><th>Status</th><th>Holder ID</th></tr>
+                            </thead>
+                            <tbody id="assetTableBody" class="small"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 8: INVENTORY MANAGEMENT MODULE -->
+    <div id="inventory" class="content-section">
+        <div class="alert alert-danger d-none" id="lowStockNotice" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> <b>Critical Alert:</b> Some items have dropped below threshold stock limits!
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3 bg-white mb-3">
+                    <h6 class="fw-bold text-primary"><i class="fa-solid fa-plus me-1"></i> Add Product Catalog</h6>
+                    <form id="prodForm" class="small">
+                        <div class="mb-1"><input type="text" id="prodName" class="form-control form-control-sm" placeholder="Product Name" required></div>
+                        <div class="mb-1"><input type="text" id="prodSku" class="form-control form-control-sm" placeholder="SKU (e.g. LAP-DELL-01)" required></div>
+                        <div class="mb-1"><input type="number" id="prodPrice" class="form-control form-control-sm" placeholder="Price" required></div>
+                        <div class="mb-1"><input type="text" id="prodCat" class="form-control form-control-sm" placeholder="Category" required></div>
+                        <div class="mb-2"><input type="number" id="prodLimit" class="form-control form-control-sm" placeholder="Min Stock Alert Level" required></div>
+                        <button type="submit" class="btn btn-primary btn-xs w-100 py-1">Save Product</button>
+                    </form>
+                </div>
+                <div class="card shadow-sm border-0 p-3 bg-white mb-3">
+                    <h6 class="fw-bold text-dark"><i class="fa-solid fa-warehouse me-1"></i> New Warehouse Hub</h6>
+                    <form id="whForm" class="small">
+                        <div class="mb-1"><input type="text" id="whName" class="form-control form-control-sm" placeholder="Warehouse Name" required></div>
+                        <div class="mb-2"><input type="text" id="whLoc" class="form-control form-control-sm" placeholder="City/Location" required></div>
+                        <button type="submit" class="btn btn-secondary btn-xs w-100 py-1">Add Depot</button>
+                    </form>
+                </div>
+                <div class="card shadow-sm border-0 p-3 bg-white mb-3">
+                    <h6 class="fw-bold text-success"><i class="fa-solid fa-boxes-stacked me-1"></i> Add / Update Live Stock</h6>
+                    <form id="stockForm" class="small">
+                        <div class="mb-1"><input type="number" id="stockProdId" class="form-control form-control-sm" placeholder="Product ID" required></div>
+                        <div class="mb-1"><input type="number" id="stockWhId" class="form-control form-control-sm" placeholder="Warehouse ID" required></div>
+                        <div class="mb-2"><input type="number" id="stockQty" class="form-control form-control-sm" placeholder="Quantity" required></div>
+                        <button type="submit" class="btn btn-success btn-xs w-100 py-1">Update Stock</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-boxes-packing me-2"></i>Stock Registry</h5>
+                    <table class="table align-middle table-sm">
+                        <thead class="table-dark small">
+                        <tr><th>Prod ID</th><th>SKU & Name</th><th>Warehouse ID</th><th>Available Qty</th><th>Alert Limit</th></tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="small"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 9: PROFESSIONAL PURCHASE & PROCURE-TO-PAY (P2P) MODULE -->
+    <div id="purchase" class="content-section">
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-handshake text-primary me-2"></i>Vendor Onboarding Console</h5>
+                    <form id="vendorForm" class="row g-2 mb-3">
+                        <div class="col-sm-6"><input type="text" id="vName" class="form-control form-control-sm" placeholder="Vendor Name" required></div>
+                        <div class="col-sm-6"><input type="text" id="vLoc" class="form-control form-control-sm" placeholder="Location" required></div>
+                        <div class="col-sm-6"><input type="number" id="vComp" class="form-control form-control-sm" placeholder="Compliance Matrix Score (%)" required></div>
+                        <div class="col-sm-6">
+                            <select id="vStatus" class="form-select form-select-sm"><option value="Active">Active</option><option value="Preferred">Preferred</option></select>
+                        </div>
+                        <div class="col-12 mt-2"><button type="submit" class="btn btn-primary btn-sm w-100"><i class="fa-solid fa-user-plus me-1"></i> Register Supplier Profile</button></div>
+                    </form>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>ID</th><th>Supplier Details</th><th>Location</th><th>Status</th></tr></thead>
+                            <tbody id="vendorTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-signature text-success me-2"></i>Purchase Order (PO) Terminal</h5>
+                    <form id="poForm" class="row g-2 mb-3">
+                        <div class="col-sm-6"><input type="number" id="poVendorId" class="form-control form-control-sm" placeholder="Vendor ID" required></div>
+                        <div class="col-sm-6"><input type="number" id="poProdId" class="form-control form-control-sm" placeholder="Product ID" required></div>
+                        <div class="col-sm-6"><input type="number" id="poQty" class="form-control form-control-sm" placeholder="Procurement Qty" required></div>
+                        <div class="col-sm-6"><input type="number" id="poAmount" class="form-control form-control-sm" placeholder="Agreed Gross Amount ($)" required></div>
+                        <div class="col-12 mt-2"><button type="submit" class="btn btn-success btn-sm w-100"><i class="fa-solid fa-paper-plane me-1"></i> Dispatch PO Order</button></div>
+                    </form>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>PO Ref</th><th>Vendor ID</th><th>Amount</th><th>Status</th></tr></thead>
+                            <tbody id="poTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-shield-halved text-warning me-2"></i>Approval Desk Matrix</h5>
+                    <table class="table table-sm align-middle small">
+                        <thead class="table-dark"><tr><th>PO Code</th><th>Exposure</th><th>Stage Workflow</th><th>Action</th></tr></thead>
+                        <tbody id="approvalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-invoice text-danger me-2"></i>Invoice Settlement Desk</h5>
+                    <table class="table table-sm align-middle small">
+                        <thead class="table-light"><tr><th>Invoice ID</th><th>Linked PO</th><th>Gross Amount</th><th>Status</th></tr></thead>
+                        <tbody id="invoiceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 10: SALES MANAGEMENT MODULE -->
+    <div id="sales" class="content-section">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-dark text-white rounded-3">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Gross Sales Pipeline</small>
+                    <h4 class="fw-bold m-0 text-warning" id="reportGrossVolume">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-white text-dark rounded-3 border-start border-success border-4">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Settled Accounts Receipts</small>
+                    <h4 class="fw-bold m-0 text-success" id="reportPaidInvoices">0 Orders</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-white text-dark rounded-3 border-start border-danger border-4">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Awaiting Outbound Billing</small>
+                    <h4 class="fw-bold m-0 text-danger" id="reportPendingOrders">0 Orders</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-address-book text-primary me-2"></i>Customer CRM Ledger</h5>
+                    <form id="customerForm" class="row g-2 mb-3">
+                        <div class="col-sm-6"><input type="text" id="cName" class="form-control form-control-sm" placeholder="Client Name" required></div>
+                        <div class="col-sm-6"><input type="email" id="cEmail" class="form-control form-control-sm" placeholder="Corporate Email" required></div>
+                        <div class="col-sm-6"><input type="text" id="cCompany" class="form-control form-control-sm" placeholder="Business Domain" required></div>
+                        <div class="col-sm-6"><input type="number" id="cCredit" class="form-control form-control-sm" placeholder="Risk Credit Line ($)" required></div>
+                        <div class="col-12 mt-2"><button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="fa-solid fa-user-plus me-1"></i> Commit Customer Registry</button></div>
+                    </form>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>ID</th><th>Client Account</th><th>Domain</th><th>Credit Threshold</th></tr></thead>
+                            <tbody id="customerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-receipt text-success me-2"></i>Sales Order (SO) Booking Desk</h5>
+                    <form id="soForm" class="row g-2 mb-3">
+                        <div class="col-sm-6"><input type="number" id="soCustomerId" class="form-control form-control-sm" placeholder="Customer ID" required></div>
+                        <div class="col-sm-6"><input type="number" id="soProdId" class="form-control form-control-sm" placeholder="Product ID" required></div>
+                        <div class="col-sm-6"><input type="number" id="soQty" class="form-control form-control-sm" placeholder="Order Volume" required></div>
+                        <div class="col-sm-6"><input type="number" id="soPrice" class="form-control form-control-sm" placeholder="Unit Value ($)" required></div>
+                        <div class="col-12 mt-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-semibold"><i class="fa-solid fa-cubes-stacked me-1"></i> Deploy Sales Order Pipeline</button></div>
+                    </form>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>SO ID</th><th>Cust ID</th><th>Prod ID</th><th>Qty</th><th>Total ($)</th></tr></thead>
+                            <tbody id="soTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 11: FINANCE MANAGEMENT MODULE -->
+    <div id="finance" class="content-section">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-white text-dark rounded-3 border-start border-primary border-4">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Total Inflow (Income)</small>
+                    <h4 class="fw-bold m-0 text-primary" id="finTotalIncome">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-white text-dark rounded-3 border-start border-danger border-4">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Total Outflow (Expenses)</small>
+                    <h4 class="fw-bold m-0 text-danger" id="finTotalExpenses">$0.00</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 bg-dark text-white rounded-3">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-1">Net Cash Flow / Profit</small>
+                    <h4 class="fw-bold m-0 text-warning" id="finNetProfit">$0.00</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Record Transaction</h5>
+                    <form id="financeForm" class="small">
+                        <div class="mb-2">
+                            <label class="small fw-semibold text-secondary">Transaction Type</label>
+                            <select id="finType" class="form-select form-select-sm" required>
+                                <option value="INCOME">Income / Revenue</option>
+                                <option value="EXPENSE">Expense / Debit</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small fw-semibold text-secondary">Category</label>
+                            <input type="text" id="finCategory" class="form-control form-control-sm" placeholder="e.g. Client Retainer, Rent" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small fw-semibold text-secondary">Amount ($)</label>
+                            <input type="number" id="finAmount" class="form-control form-control-sm" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-semibold text-secondary">Reference Notes</label>
+                            <textarea id="finNotes" class="form-control form-control-sm" rows="2" placeholder="Invoice reference details..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="fa-solid fa-cash-register me-1"></i> Post to Ledger</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-list-check text-secondary me-2"></i>General Ledger / Journal</h5>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top">
+                            <tr><th>TXN ID</th><th>Type</th><th>Category</th><th>Amount</th><th>Notes</th></tr>
+                            </thead>
+                            <tbody id="financeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 12: NEW CUSTOMER CRM MODULE -->
+    <div id="crm" class="content-section">
+        <div class="row g-4 mb-4">
+            <!-- Lead Management Console -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bullhorn text-primary me-2"></i>Lead Acquisition Desk</h5>
+                    <form id="leadForm" class="small">
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Lead Name</label><input type="text" id="leadName" class="form-control form-control-sm" placeholder="John Doe" required></div>
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Contact Email</label><input type="email" id="leadEmail" class="form-control form-control-sm" placeholder="john@example.com" required></div>
+                        <div class="mb-2">
+                            <label class="small fw-semibold text-secondary">Lead Status</label>
+                            <select id="leadStatus" class="form-select form-select-sm"><option value="NEW">New Prospect</option><option value="CONTACTED">Contacted</option><option value="QUALIFIED">Qualified Lead</option></select>
+                        </div>
+                        <div class="mb-3"><label class="small fw-semibold text-secondary">Next Follow-up Reminder</label><input type="date" id="leadReminder" class="form-control form-control-sm" required></div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="fa-solid fa-user-plus me-1"></i> Log New Prospect</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Profiles & Leads Ledger -->
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-address-book text-secondary me-2"></i>Lead Pipeline & Profiles</h5>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>ID</th><th>Prospect Name</th><th>Email</th><th>Pipeline Stage</th><th>Follow-up Reminder</th></tr></thead>
+                            <tbody id="crmLeadsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Support Tickets System -->
+        <div class="card shadow-sm border-0 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-ticket-simple text-danger me-2"></i>Customer Support Helpdesk Tickets</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle small">
+                    <thead class="table-dark"><tr><th>Ticket ID</th><th>Customer Description</th><th>Priority Status</th><th>Operational Status</th></tr></thead>
+                    <tbody id="crmTicketsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 13: NEW PROJECT MANAGEMENT MODULE -->
+    <div id="projects" class="content-section">
+        <div class="row g-4 mb-4">
+            <!-- Project Creation Panel -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-diagram-project text-dark me-2"></i>Initialize Project Pipeline</h5>
+                    <form id="projectForm" class="small mb-3">
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Project Name</label><input type="text" id="projName" class="form-control form-control-sm" placeholder="ERP Module Upgrade" required></div>
+                        <div class="mb-3"><label class="small fw-semibold text-secondary">Final Timeline Deadline</label><input type="date" id="projDeadline" class="form-control form-control-sm" required></div>
+                        <button type="submit" class="btn btn-dark btn-sm w-100 fw-semibold"><i class="fa-solid fa-folder-plus me-1"></i> Deploy New Project Framework</button>
+                    </form>
+                    <hr>
+                    <!-- Task Assignment Panel -->
+                    <h6 class="fw-bold text-secondary mb-2 small"><i class="fa-solid fa-tasks me-1"></i>Assign Sprint Task</h6>
+                    <form id="taskForm" class="small">
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Target Project ID</label><input type="number" id="taskProjId" class="form-control form-control-sm" placeholder="e.g. 1" required></div>
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Task Title Description</label><input type="text" id="taskTitle" class="form-control form-control-sm" placeholder="API Implementation" required></div>
+                        <div class="mb-2"><label class="small fw-semibold text-secondary">Assignee Employee ID</label><input type="number" id="taskEmpId" class="form-control form-control-sm" placeholder="e.g. 12" required></div>
+                        <button type="submit" class="btn btn-secondary btn-xs w-100 py-1">Delegate Task Assignment</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Project Progress Matrix & Collaboration Desk -->
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-list-check text-success me-2"></i>Active Project Telemetry & Task Status</h5>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-light sticky-top"><tr><th>ID</th><th>Project Context</th><th>Milestone Target Deadline</th><th>Team Collaboration Progress</th></tr></thead>
+                            <tbody id="projectTableBody"></tbody>
+                        </table>
+                    </div>
+                    <hr>
+                    <h6 class="fw-bold text-dark mt-2 mb-2 small"><i class="fa-solid fa-users-gear text-primary me-2"></i>Team Collaboration Live Sprint Tasks</h6>
+                    <div class="table-responsive scrollable-panel">
+                        <table class="table table-sm align-middle small table-hover">
+                            <thead class="table-dark sticky-top"><tr><th>Task ID</th><th>Project Reference</th><th>Task Assignment</th><th>Assigned Resource ID</th></tr></thead>
+                            <tbody id="tasksTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- JAVASCRIPT CONTROLLER ARCHITECTURE -->
+<script>
+    // Tab Router Component
+    function switchTab(tabId) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        if(event && event.target) {
+            event.target.closest('.nav-link').classList.add('active');
+        }
+        document.getElementById('pageTitle').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1) + " Management";
+    }
+
+    // --- Core Module Fetch Handlers ---
+    async function loadEmployees() {
+        const res = await fetch('/api/employees/all');
+        if(res.ok) {
+            const data = await res.json();
+            document.getElementById('employeeTableBody').innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.name}</td><td>${e.email}</td><td>${e.department}</td><td>${e.designation}</td><td>$${e.salary.toFixed(2)}</td></tr>`).join('');
+        }
+    }
+
+    async function triggerAttendance(statusType) {
+        const empId = document.getElementById('attEmpId').value;
+        if(!empId) return alert('Please input Employee ID');
+        const res = await fetch(`/api/attendance/${statusType}?employeeId=${empId}`, { method: 'POST' });
+        if(res.ok) alert(`Attendance system logged: ${statusType.toUpperCase()} successfully.`);
+    }
+
+    async function loadPendingLeaves() {
+        const res = await fetch('/api/leaves/pending');
+        if(res.ok) {
+            const data = await res.json();
+            document.getElementById('leaveCountBadge').innerText = data.length;
+            document.getElementById('leaveTableBody').innerHTML = data.map(l => `<tr><td>#REQ-${l.id}</td><td>${l.employeeId}</td><td>${l.startDate} to ${l.endDate}</td><td>${l.reason}</td><td><span class="badge bg-warning">${l.status}</span></td><td><button class="btn btn-success btn-xs" onclick="updateLeave(${l.id},'APPROVED')">Approve</button></td></tr>`).join('');
+        }
+    }
+
+    async function loadPayroll() {
+        const res = await fetch('/api/payroll/all');
+        if(res.ok) {
+            const data = await res.json();
+            document.getElementById('payrollTableBody').innerHTML = data.map(p => `<tr><td>${p.id}</td><td>ID: ${p.employeeId}</td><td>${p.month}</td><td>$${p.netSalary.toFixed(2)}</td><td><span class="badge bg-success">${p.status}</span></td></tr>`).join('');
+        }
+    }
+
+    async function loadAssets() {
+        const res = await fetch('/api/assets/all');
+        if(res.ok) {
+            const data = await res.json();
+            document.getElementById('assetTableBody').innerHTML = data.map(a => `<tr><td>${a.id}</td><td>${a.name} (${a.type})</td><td>${a.serialNumber}</td><td>${a.status}</td><td>${a.assignedEmployeeId || 'Unassigned'}</td></tr>`).join('');
+        }
+    }
+
+    // --- Inventory Module Core ---
+    async function initInventoryModule() {
+        const res = await fetch('/api/inventory/all');
+        if(res.ok) {
+            const data = await res.json();
+            document.getElementById('inventoryTableBody').innerHTML = data.map(i => `<tr><td>${i.productId}</td><td><b>${i.sku}</b> - ${i.productName}</td><td>Depot ${i.warehouseId}</td><td>${i.quantity}</td><td>${i.alertLimit}</td></tr>`).join('');
+        }
+    }
+
+    // --- Purchase Hub Core ---
+    async function initPurchaseModule() {
+        const vRes = await fetch('/api/purchase/vendors');
+        const poRes = await fetch('/api/purchase/pos');
+        if(vRes.ok) {
+            const vendors = await vRes.json();
+            document.getElementById('vendorTableBody').innerHTML = vendors.map(v => `<tr><td>${v.id}</td><td>${v.name}</td><td>${v.location}</td><td>${v.status}</td></tr>`).join('');
+        }
+        if(poRes.ok) {
+            const pos = await poRes.json();
+            document.getElementById('poOverviewBadge').innerText = pos.filter(p => p.status !== 'Executed').length;
+            document.getElementById('poTableBody').innerHTML = pos.map(p => `<tr><td>#PO-${p.id}</td><td>Item ID: ${p.productId}</td><td>$${p.amount.toFixed(2)}</td><td><span class="badge bg-info">${p.status}</span></td></tr>`).join('');
+        }
+    }
+
+    // --- Sales Hub Engine ---
+    async function initSalesModule() {
+        const cRes = await fetch('/api/sales/customers');
+        const soRes = await fetch('/api/sales/orders');
+
+        if(cRes.ok) {
+            const customers = await cRes.json();
+            document.getElementById('customerTableBody').innerHTML = customers.map(c => `<tr><td>${c.id}</td><td><b>${c.name}</b></td><td>${c.domain}</td><td>$${c.creditLimit}</td></tr>`).join('');
+        }
+
+        if(soRes.ok) {
+            const orders = await soRes.json();
+            let totalRev = 0;
+            orders.forEach(o => totalRev += (o.qty * o.price));
+
+            document.getElementById('reportGrossVolume').innerText = `$${totalRev.toFixed(2)}`;
+            document.getElementById('totalRevenueBadge').innerText = `$${totalRev.toFixed(2)}`;
+            document.getElementById('reportPaidInvoices').innerText = `${orders.length} Active Orders`;
+
+            document.getElementById('soTableBody').innerHTML = orders.map(o => `<tr><td>#SO-${o.id}</td><td>${o.customerId}</td><td>${o.productId}</td><td>${o.qty}</td><td>$${(o.qty * o.price).toFixed(2)}</td></tr>`).join('');
+        }
+    }
+
+    // --- Integrated Finance Hub Engine ---
+    async function initFinanceModule() {
+        const res = await fetch('/api/finance/transactions');
+        if(res.ok) {
+            const transactions = await res.json();
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            let tableHtml = '';
+
+            transactions.forEach(t => {
+                const isIncome = t.type === 'INCOME';
+                if(isIncome) totalIncome += t.amount;
+                else totalExpenses += t.amount;
+
+                const typeBadge = isIncome ? '<span class="badge bg-success-subtle text-success">INCOME</span>' : '<span class="badge bg-danger-subtle text-danger">EXPENSE</span>';
+                const amountClass = isIncome ? 'text-success' : 'text-danger';
+                const amountPrefix = isIncome ? '+' : '-';
+
+                tableHtml += `<tr>
+                    <td>#TXN-${t.id}</td>
+                    <td>${typeBadge}</td>
+                    <td>${t.category}</td>
+                    <td class="fw-bold ${amountClass}">${amountPrefix}$${t.amount.toFixed(2)}</td>
+                    <td class="text-muted">${t.notes || '-'}</td>
+                </tr>`;
+            });
+
+            const netProfit = totalIncome - totalExpenses;
+
+            document.getElementById('finTotalIncome').innerText = `$${totalIncome.toFixed(2)}`;
+            document.getElementById('finTotalExpenses').innerText = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('finNetProfit').innerText = `$${netProfit.toFixed(2)}`;
+            document.getElementById('finNetProfit').className = netProfit < 0 ? 'fw-bold m-0 text-danger' : 'fw-bold m-0 text-warning';
+
+            document.getElementById('financeTableBody').innerHTML = tableHtml || '<tr><td colspan="5" class="text-center text-muted">No transactions registered.</td></tr>';
+        }
+    }
+
+    // --- Customer CRM Hub Module Architecture ---
+    async function initCRMModule() {
+        const leadsRes = await fetch('/api/crm/leads');
+        const ticketsRes = await fetch('/api/crm/tickets');
+
+        if(leadsRes.ok) {
+            const leads = await leadsRes.json();
+            document.getElementById('crmLeadsTableBody').innerHTML = leads.map(l => `<tr><td>#LD-${l.id}</td><td><b>${l.name}</b></td><td>${l.email}</td><td><span class="badge bg-primary">${l.status}</span></td><td><i class="fa-regular fa-bell text-warning me-1"></i>${l.reminderDate}</td></tr>`).join('');
+        }
+        if(ticketsRes.ok) {
+            const tickets = await ticketsRes.json();
+            document.getElementById('crmTicketsTableBody').innerHTML = tickets.map(t => `<tr><td>#TCK-${t.id}</td><td>${t.description}</td><td><span class="badge bg-danger">${t.priority}</span></td><td><span class="workflow-badge bg-secondary text-white">${t.status}</span></td></tr>`).join('');
+        }
+    }
+
+    // --- Project Hub Module Engine ---
+    async function initProjectModule() {
+        const projRes = await fetch('/api/projects/all');
+        const tasksRes = await fetch('/api/projects/tasks');
+
+        if(projRes.ok) {
+            const projects = await projRes.json();
+            document.getElementById('projectTableBody').innerHTML = projects.map(p => `<tr><td>#PRJ-${p.id}</td><td><b>${p.name}</b></td><td><i class="fa-regular fa-calendar-times text-danger me-1"></i>${p.deadline}</td><td><div class="progress" style="height: 6px;"><div class="progress-bar bg-success" style="width: ${p.progress}%"></div></div><small class="text-muted d-block mt-1">${p.progress}% Completed</small></td></tr>`).join('');
+        }
+        if(tasksRes.ok) {
+            const tasks = await tasksRes.json();
+            document.getElementById('tasksTableBody').innerHTML = tasks.map(t => `<tr><td>#TSK-${t.id}</td><td>Project ID: ${t.projectId}</td><td>${t.title}</td><td><span class="badge bg-dark">Resource ID: ${t.employeeId}</span></td></tr>`).join('');
+        }
+    }
+
+    // Form Action Triggers & Listeners
+    document.getElementById('customerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { name: document.getElementById('cName').value, email: document.getElementById('cEmail').value, domain: document.getElementById('cCompany').value, creditLimit: parseFloat(document.getElementById('cCredit').value) };
+        const res = await fetch('/api/sales/customers/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Customer Profile Added.'); document.getElementById('customerForm').reset(); initSalesModule(); }
+    });
+
+    document.getElementById('soForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { customerId: parseInt(document.getElementById('soCustomerId').value), productId: parseInt(document.getElementById('soProdId').value), qty: parseInt(document.getElementById('soQty').value), price: parseFloat(document.getElementById('soPrice').value) };
+        const res = await fetch('/api/sales/orders/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Sales Order Deployed.'); document.getElementById('soForm').reset(); initSalesModule(); }
+    });
+
+    document.getElementById('financeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { type: document.getElementById('finType').value, category: document.getElementById('finCategory').value, amount: parseFloat(document.getElementById('finAmount').value), notes: document.getElementById('finNotes').value };
+        const res = await fetch('/api/finance/transactions/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Transaction Successfully Posted to Ledger.'); document.getElementById('financeForm').reset(); initFinanceModule(); }
+    });
+
+    document.getElementById('leadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { name: document.getElementById('leadName').value, email: document.getElementById('leadEmail').value, status: document.getElementById('leadStatus').value, reminderDate: document.getElementById('leadReminder').value };
+        const res = await fetch('/api/crm/leads/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Lead Registered with Follow-up Reminder.'); document.getElementById('leadForm').reset(); initCRMModule(); }
+    });
+
+    document.getElementById('projectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { name: document.getElementById('projName').value, deadline: document.getElementById('projDeadline').value, progress: 0 };
+        const res = await fetch('/api/projects/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Project Framework Deployed.'); document.getElementById('projectForm').reset(); initProjectModule(); }
+    });
+
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = { projectId: parseInt(document.getElementById('taskProjId').value), title: document.getElementById('taskTitle').value, employeeId: parseInt(document.getElementById('taskEmpId').value) };
+        const res = await fetch('/api/projects/tasks/assign', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if(res.ok) { alert('Sprint Task Delegated.'); document.getElementById('taskForm').reset(); initProjectModule(); }
+    });
+</script>
+</body>
+</html>
